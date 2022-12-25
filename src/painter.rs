@@ -410,7 +410,7 @@ impl Painter {
 
                 let data: &[u8] = bytemuck::cast_slice(image.pixels.as_ref());
 
-                self.upload_texture_srgb(delta.pos, image.size, delta.filter, data);
+                self.upload_texture_srgb(delta.pos, image.size, delta.options, data);
             }
             egui::ImageData::Font(image) => {
                 assert_eq!(
@@ -419,13 +419,13 @@ impl Painter {
                     "Mismatch between texture size and texel count"
                 );
 
-                let gamma = 1.0;
+                //let gamma = 1.0;
                 let data: Vec<u8> = image
-                    .srgba_pixels(gamma)
+                    .srgba_pixels(None)
                     .flat_map(|a| a.to_array())
                     .collect();
 
-                self.upload_texture_srgb(delta.pos, image.size, delta.filter, &data);
+                self.upload_texture_srgb(delta.pos, image.size, delta.options, &data);
             }
         };
     }
@@ -434,7 +434,7 @@ impl Painter {
         &mut self,
         pos: Option<[usize; 2]>,
         [w, h]: [usize; 2],
-        texture_filter: TextureFilter,
+        options: egui::TextureOptions,
         data: &[u8],
     ) {
         assert_eq!(data.len(), w * h * 4);
@@ -450,12 +450,12 @@ impl Painter {
             gl::TexParameteri(
                 gl::TEXTURE_2D,
                 gl::TEXTURE_MAG_FILTER,
-                texture_filter.glow_code() as i32,
+                options.magnification.glow_code() as i32,
             );
             gl::TexParameteri(
                 gl::TEXTURE_2D,
                 gl::TEXTURE_MIN_FILTER,
-                texture_filter.glow_code() as i32,
+                options.minification.glow_code() as i32,
             );
 
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
